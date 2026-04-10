@@ -3,18 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AFL Scout v62</title>
+    <title>Statz AFL v65</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#fbc531">
-
     <style>
-        :root {
-            --home-blue: #002b5c; --home-red: #d71920;
-            --away-grey: #222222; --away-border: #777777;
-            --accent: #fbc531; --entry-green: #27ae60; --bg-dark: #000000;
-        }
+        :root { --home-blue: #002b5c; --home-red: #d71920; --away-grey: #222222; --away-border: #777777; --accent: #fbc531; --entry-green: #27ae60; --bg-dark: #000000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: var(--bg-dark); color: white; display: flex; flex-direction: column; min-height: 100dvh; }
         #display-zone { flex: 0 0 auto; background: #0a0a0a; padding: 8px; border-bottom: 2px solid #333; }
@@ -63,14 +58,8 @@
         <div class="timer-box" id="h-timer-box"><div class="timer-label">Home Last I50</div><div class="timer-val" id="h-timer">00:00</div></div>
         <div class="timer-box" id="a-timer-box"><div class="timer-label">Away Last I50</div><div class="timer-val" id="a-timer">00:00</div></div>
     </div>
-    <div class="q-nav">
-        <button class="q-btn active" onclick="setQ(1)">Q1</button><button class="q-btn" onclick="setQ(2)">Q2</button>
-        <button class="q-btn" onclick="setQ(3)">Q3</button><button class="q-btn" onclick="setQ(4)">Q4</button>
-    </div>
-    <div class="bars-container">
-        <div class="bar-group" id="bar-CLR"></div><div class="bar-group" id="bar-I50"></div>
-        <div class="bar-group" id="bar-TKL"></div><div class="bar-group" id="bar-TO"></div>
-    </div>
+    <div class="q-nav"><button class="q-btn active" onclick="setQ(1)">Q1</button><button class="q-btn" onclick="setQ(2)">Q2</button><button class="q-btn" onclick="setQ(3)">Q3</button><button class="q-btn" onclick="setQ(4)">Q4</button></div>
+    <div class="bars-container"><div class="bar-group" id="bar-CLR"></div><div class="bar-group" id="bar-I50"></div><div class="bar-group" id="bar-TKL"></div><div class="bar-group" id="bar-TO"></div></div>
 </div>
 
 <div id="input-zone">
@@ -98,12 +87,11 @@
 
 <script>
     let q = 1, curT = 'h', history = [];
-    let lastI50Time = {h: null, a: null}; // Null means timer is waiting for first click
-    let lastToTime = {h:0, a:0};
-    let db = JSON.parse(localStorage.getItem('afl_v62')) || {
+    let lastI50Time = {h: null, a: null}, lastToTime = {h: 0, a: 0}, lastClrTime = {h: 0, a: 0};
+    let db = JSON.parse(localStorage.getItem('statz_v65')) || {
         stats: {1:{},2:{},3:{},4:{}},
         shots: {1:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 2:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 3:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 4:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}},
-        toConv: {1:{h:0,a:0}, 2:{h:0,a:0}, 3:{h:0,a:0}, 4:{h:0,a:0}}
+        timing: {1:{hTo:[], aTo:[], hClr:[], aClr:[]}, 2:{hTo:[], aTo:[], hClr:[], aClr:[]}, 3:{hTo:[], aTo:[], hClr:[], aClr:[]}, 4:{hTo:[], aTo:[], hClr:[], aClr:[]}}
     };
 
     const keys = ['hClr','aClr','hI50','aI50','hTkl','aTkl','hTo','aTo'];
@@ -113,63 +101,55 @@
 
     function updateTimers() {
         ['h','a'].forEach(t => {
-            let display = document.getElementById(`${t}-timer`);
-            let box = document.getElementById(`${t}-timer-box`);
-            
-            if (lastI50Time[t] === null) {
-                display.innerText = "00:00";
-                box.classList.remove('alarm-active');
-                return;
-            }
-
-            let diff = Math.floor((Date.now() - lastI50Time[t]) / 1000);
-            let m = Math.floor(diff / 60);
-            let s = diff % 60;
-            if (m > 0 && m % 5 === 0 && s < 10) box.classList.add('alarm-active');
-            else box.classList.remove('alarm-active');
+            let display = document.getElementById(`${t}-timer`), box = document.getElementById(`${t}-timer-box`);
+            if (lastI50Time[t] === null) { display.innerText = "00:00"; box.classList.remove('alarm-active'); return; }
+            let diff = Math.floor((Date.now() - lastI50Time[t]) / 1000), m = Math.floor(diff / 60), s = diff % 60;
+            if (m > 0 && m % 5 === 0 && s < 10) box.classList.add('alarm-active'); else box.classList.remove('alarm-active');
             display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         });
     }
 
     function add(k) { 
         db.stats[q][k]++; 
-        if(k.endsWith('I50')) lastI50Time[k[0]] = Date.now();
-        if(k.endsWith('To')) lastToTime[k[0]] = Date.now(); 
+        let now = Date.now();
+        if(k.endsWith('I50')) {
+            lastI50Time[k[0]] = now;
+            if(lastClrTime[k[0]] && now - lastClrTime[k[0]] < 30000) db.timing[q][k[0]+'Clr'].push((now - lastClrTime[k[0]])/1000);
+            lastClrTime[k[0]] = 0;
+        }
+        if(k.endsWith('Clr')) lastClrTime[k[0]] = now;
+        if(k.endsWith('To')) lastToTime[k[0]] = now;
         history.push({t:'s', q, k}); save(); 
     }
 
-    function setQ(n) { 
-        q=n; 
-        lastI50Time = {h: null, a: null}; // Reset timers on quarter change
-        document.querySelectorAll('.q-btn').forEach((b,i)=>b.classList.toggle('active', i+1===n)); 
-        render(); 
-    }
-
-    function openShot(t) { curT=t; document.getElementById('shotModal').style.display='flex'; }
     function regShot(m) { 
         let k=curT+m; db.shots[q][k]++; 
-        if(Date.now() - lastToTime[curT] < 45000) { db.toConv[q][curT]++; lastToTime[curT]=0; }
+        let now = Date.now();
+        if(lastToTime[curT] && now - lastToTime[curT] < 45000) db.timing[q][curT+'To'].push((now - lastToTime[curT])/1000);
+        lastToTime[curT] = 0;
         history.push({t:'g', q, k}); closeMod('shotModal'); save(); 
     }
 
+    function setQ(n) { q=n; lastI50Time = {h: null, a: null}; document.querySelectorAll('.q-btn').forEach((b,i)=>b.classList.toggle('active', i+1===n)); render(); }
+    function openShot(t) { curT=t; document.getElementById('shotModal').style.display='flex'; }
     function undo() { if(!history.length) return; let l=history.pop(); if(l.t==='s') db.stats[l.q][l.k]--; else db.shots[l.q][l.k]--; save(); }
-    function save() { localStorage.setItem('afl_v62', JSON.stringify(db)); render(); }
+    function save() { localStorage.setItem('statz_v65', JSON.stringify(db)); render(); }
     function closeMod(id) { document.getElementById(id).style.display='none'; }
+    function getAvg(arr) { if(!arr.length) return 0; return (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1); }
 
     function render() {
         keys.forEach(k => document.getElementById(k).innerText = db.stats[q][k]);
-        let s=db.shots[q], st=db.stats[q];
-        let hS=s.hg+s.hb+s.ho+s.hr, aS=s.ag+s.ab+s.ao+s.ar;
+        let s=db.shots[q], st=db.stats[q], hS=s.hg+s.hb+s.ho+s.hr, aS=s.ag+s.ab+s.ao+s.ar;
         document.getElementById('hShotTotal').innerText=hS; document.getElementById('aShotTotal').innerText=aS;
         document.getElementById('hScoreSub').innerText=`${s.hg}.${s.hb+s.hr} (${s.hg*6+s.hb+s.hr})`;
         document.getElementById('aScoreSub').innerText=`${s.ag}.${s.ab+s.ar} (${s.ag*6+s.ab+s.ar})`;
         document.getElementById('q-label').innerText = `Q${q}`;
         document.getElementById('q-score-val').innerText = `${s.hg*6+s.hb+s.hr}-${s.ag*6+s.ab+s.ar}`;
-        
         document.getElementById('hClrEff').innerText=`To I50: ${st.hClr>0?Math.round((st.hI50/st.hClr)*100):0}%`;
         document.getElementById('aClrEff').innerText=`To I50: ${st.aClr>0?Math.round((st.aI50/st.aClr)*100):0}%`;
         document.getElementById('hEff').innerText=`To Shot: ${st.hI50>0?Math.round((hS/st.hI50)*100):0}%`;
-        document.getElementById('hToConv').innerText=`To Shot: ${st.hTo>0?Math.round((db.toConv[q].h/st.hTo)*100):0}%`;
+        const hToC = db.timing[q].hTo.length;
+        document.getElementById('hToConv').innerText=`To Shot: ${st.hTo>0?Math.round((hToC/st.hTo)*100):0}%`;
 
         const renderBar = (id, label, h, a) => {
             let diff = h - a;
@@ -182,42 +162,37 @@
     function showSummary() {
         const sS = (k) => [1,2,3,4].reduce((a,b)=>a+(db.stats[b][k]||0),0);
         const sG = (k) => [1,2,3,4].reduce((a,b)=>a+(db.shots[b][k]||0),0);
-        const getT = (t) => sG(t+'g')+sG(t+'b')+sG(t+'o')+sG(t+'r');
-        const hSh=getT('h'), aSh=getT('a');
-        let html = `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">FULL MATCH SUMMARY</h4><table class="sum-table"><tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>${row('Score', `${sG('hg')}.${sG('hb')+sG('hr')} (${sG('hg')*6+sG('hb')+sG('hr')})`, `${sG('ag')}.${sG('ab')+sG('ar')} (${sG('ag')*6+sG('ab')+sG('ar')})`)}${row('Clearance', sS('hClr'), sS('aClr'), true)}${row('Inside 50', sS('hI50'), sS('aI50'), true)}${row('Tackles', sS('hTkl'), sS('aTkl'), true)}${row('Turnovers', sS('hTo'), sS('aTo'), true)}<tr><td colspan="4" style="font-size:0.55rem; color:#555; padding-top:10px;">CONVERSION PERFORMANCE</td></tr>${row('Clearance to I50 (Rate)', Math.round((sS('hI50')/sS('hClr')||0)*100)+'%', Math.round((sS('aI50')/sS('aClr')||0)*100)+'%')}${row('Inside 50 to Shot (Rate)', Math.round((hSh/sS('hI50')||0)*100)+'%', Math.round((aSh/sS('aI50')||0)*100)+'%')}${row('Turnover to Shot (Rate)', Math.round(([1,2,3,4].reduce((a,b)=>a+db.toConv[b].h,0)/sS('hTo')||0)*100)+'%', Math.round(([1,2,3,4].reduce((a,b)=>a+db.toConv[b].a,0)/sS('aTo')||0)*100)+'%')}</table></div>`;
-        [1,2,3,4].forEach(i => {
-            let s=db.shots[i], st=db.stats[i];
-            html += `<div class="sum-card" style="border-left-color:#444;"><h4 style="margin:0 0 8px 0; font-size:0.65rem; color:var(--accent);">QUARTER ${i}</h4><table class="sum-table"><tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>${row('Score', `${s.hg}.${s.hb+s.hr}`, `${s.ag}.${s.ab+s.ar}`)}${row('Clearance', st.hClr, st.aClr, true)}${row('Inside 50', st.hI50, st.aI50, true)}${row('Tackle', st.hTkl, st.aTkl, true)}${row('Turnover', st.hTo, st.aTo, true)}</table></div>`;
-        });
+        const sT = (k) => [1,2,3,4].flatMap(i => db.timing[i][k]);
+        let html = `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">FULL MATCH SUMMARY</h4><table class="sum-table">
+            <tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>
+            ${row('Score', `${sG('hg')}.${sG('hb')+sG('hr')} (${sG('hg')*6+sG('hb')+sG('hr')})`, `${sG('ag')}.${sG('ab')+sG('ar')} (${sG('ag')*6+sG('ab')+sG('ar')})`)}
+            ${row('Clearance', sS('hClr'), sS('aClr'), true)}
+            ${row('Inside 50', sS('hI50'), sS('aI50'), true)}
+            ${row('Turnovers', sS('hTo'), sS('aTo'), true)}
+            <tr><td colspan="4" style="font-size:0.55rem; color:#555; padding-top:10px;">EFFICIENCY</td></tr>
+            ${row('TO to Shot Rate', Math.round((sT('hTo').length/sS('hTo')||0)*100)+'%', Math.round((sT('aTo').length/sS('aTo')||0)*100)+'%')}
+            ${row('Clr to I50 Rate', Math.round((sS('hI50')/sS('hClr')||0)*100)+'%', Math.round((sS('aI50')/sS('aClr')||0)*100)+'%')}
+        </table></div>`;
         document.getElementById('sum-content').innerHTML = html;
         document.getElementById('finishModal').style.display='flex';
     }
 
-    function row(l, h, a, d) {
-        let diff = parseFloat(h)-parseFloat(a);
-        return `<tr><td>${l}</td><td>${h}</td><td>${a}</td><td style="color:${diff>0?'#27ae60':(diff<0?'#d71920':'#777')}">${d?(diff>0?'+'+diff.toFixed(0):diff.toFixed(0)):'-'}</td></tr>`;
-    }
+    function row(l, h, a, d) { let diff = parseFloat(h)-parseFloat(a); return `<tr><td>${l}</td><td>${h}</td><td>${a}</td><td style="color:${diff>0?'#27ae60':(diff<0?'#d71920':'#777')}">${d?(diff>0?'+'+diff.toFixed(0):diff.toFixed(0)):'-'}</td></tr>`; }
 
     function exportCSV() {
-        let csv = "Quarter,Stat,Home,Away,Diff,Home %,Away %\n";
+        let csv = "Quarter,Stat,Home,Away,Avg Home Speed,Avg Away Speed\n";
         [1,2,3,4].forEach(i => {
-            let s=db.shots[i], st=db.stats[i];
-            const hSh = s.hg+s.hb+s.ho+s.hr, aSh = s.ag+s.ab+s.ao+s.ar;
-            const r = (n, h, v, hp='', ap='') => csv += `Q${i},${n},${h},${v},${h-v},${hp},${ap}\n`;
-            r('Goals', s.hg, s.ag); r('Behinds', s.hb+s.hr, s.ab+s.ar); r('Clearance', st.hClr, st.aClr);
-            r('I50', st.hI50, st.aI50); r('Turnover', st.hTo, st.aTo); r('Tackles', st.hTkl, st.aTkl);
-            r('Clr to I50 Rate', '', '', '', Math.round((st.hI50/st.hClr||0)*100)+'%', Math.round((st.aI50/st.aClr||0)*100)+'%');
-            r('I50 to Shot Rate', '', '', '', Math.round((hSh/st.hI50||0)*100)+'%', Math.round((aSh/st.aI50||0)*100)+'%');
-            r('TO to Shot Rate', '', '', '', Math.round((db.toConv[i].h/st.hTo||0)*100)+'%', Math.round((db.toConv[i].a/st.aTo||0)*100)+'%');
+            let s=db.shots[i], st=db.stats[i], t=db.timing[i];
+            const r = (n, h, v, hs='', as='') => csv += `Q${i},${n},${h},${v},${hs},${as}\n`;
+            r('Score', `${s.hg}.${s.hb+s.hr}`, `${s.ag}.${s.ab+s.ar}`);
+            r('CLR to I50', st.hI50, st.aI50, getAvg(t.hClr), getAvg(t.aClr));
+            r('TO to Shot', t.hTo.length, t.aTo.length, getAvg(t.hTo), getAvg(t.aTo));
         });
         let b=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(b);
-        a.download=`AFL_Scout_Export.csv`; a.click();
+        a.download=`Statz_Export.csv`; a.click();
     }
     function resetGame() { if(confirm("Reset match data?")) { localStorage.clear(); location.reload(); } }
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log("SW failed", err));
-    }
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>

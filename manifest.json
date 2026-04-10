@@ -1,6 +1,6 @@
 {
-  "name": "AFL Scout Analytics",
-  "short_name": "AFL Scout",
+  "name": "Statz AFL",
+  "short_name": "Statz",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#000000",
