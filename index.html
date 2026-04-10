@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AFL Scout v61</title>
-    
+    <title>AFL Scout v62</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,28 +15,18 @@
             --away-grey: #222222; --away-border: #777777;
             --accent: #fbc531; --entry-green: #27ae60; --bg-dark: #000000;
         }
-
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: var(--bg-dark); color: white; display: flex; flex-direction: column; min-height: 100dvh; }
-
         #display-zone { flex: 0 0 auto; background: #0a0a0a; padding: 8px; border-bottom: 2px solid #333; }
-        
         .timer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
         .timer-box { background: #111; border: 1px solid #333; border-radius: 6px; padding: 4px; text-align: center; transition: background 0.3s; }
         .timer-label { font-size: 0.5rem; color: #777; font-weight: 900; text-transform: uppercase; }
         .timer-val { font-size: 1.1rem; font-weight: 900; color: var(--accent); font-family: monospace; }
-
-        @keyframes pulse-red {
-            0% { background: #111; }
-            50% { background: #7b0000; box-shadow: inset 0 0 15px #ff0000; }
-            100% { background: #111; }
-        }
+        @keyframes pulse-red { 0% { background: #111; } 50% { background: #7b0000; box-shadow: inset 0 0 15px #ff0000; } 100% { background: #111; } }
         .alarm-active { animation: pulse-red 1s infinite; border-color: #ff0000 !important; }
-
         .q-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px;}
         .q-btn { height: 32px; border: none; background: #222; color: #666; border-radius: 4px; font-weight: 900; }
         .q-btn.active { background: var(--entry-green); color: white; }
-
         .bars-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 5px 0; }
         .bar-group { display: flex; flex-direction: column; gap: 2px; }
         .bar-label { font-size: 0.5rem; font-weight: 900; text-transform: uppercase; color: #555; text-align: center; }
@@ -45,7 +34,6 @@
         .bar-fill-h { height: 100%; background: var(--home-red); transition: width 0.3s ease; }
         .bar-fill-a { height: 100%; background: var(--away-border); transition: width 0.3s ease; }
         .bar-diff { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3; font-size: 0.7rem; font-weight: 900; color: #fff; text-shadow: 1px 1px 1px #000; }
-
         #input-zone { flex: 1; background: #1a1a1a; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; }
         .tile { position: relative; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
@@ -53,12 +41,10 @@
         .tile-label { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; }
         .tile-count { font-size: 2.1rem; font-weight: 900; }
         .tile-sub { font-size: 0.55rem; font-weight: bold; opacity: 0.8; }
-
         .shot-row { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 6px; }
         .score-center-tile { background: #000; border: 1px solid #333; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .score-center-val { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
         .score-center-label { font-size: 0.5rem; font-weight: 900; color: #555; text-transform: uppercase; }
-
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; align-items: center; justify-content: center; padding: 10px; }
         .modal-content { background: #111; width: 100%; border-radius: 12px; border: 1px solid var(--accent); display: flex; flex-direction: column; max-height: 94dvh; }
         .summary-scroll { flex: 1; overflow-y: auto; padding: 12px; }
@@ -97,57 +83,24 @@
         <div class="tile tile-a" onclick="add('aTkl')"><div class="tile-label">Tackle</div><div class="tile-count" id="aTkl">0</div></div>
         <div class="tile h-red" onclick="add('hTo')"><div class="tile-label">Turnover</div><div class="tile-count" id="hTo">0</div><div class="tile-sub" id="hToConv">To Shot: 0%</div></div>
         <div class="tile tile-a" onclick="add('aTo')"><div class="tile-label">Turnover</div><div class="tile-count" id="aTo">0</div><div class="tile-sub" id="aToConv">To Shot: 0%</div></div>
-        
         <div class="shot-row" style="grid-column: span 2;">
-            <div class="tile h-blue" onclick="openShot('h')">
-                <div class="tile-label">Shot</div>
-                <div class="tile-count" id="hShotTotal" style="font-size: 1.6rem;">0</div>
-                <div class="tile-sub" id="hScoreSub">0.0 (0)</div>
-            </div>
-            <div class="score-center-tile">
-                <div class="score-center-label" id="q-label">Q1</div>
-                <div class="score-center-val" id="q-score-val">0-0</div>
-            </div>
-            <div class="tile tile-a" onclick="openShot('a')">
-                <div class="tile-label">Shot</div>
-                <div class="tile-count" id="aShotTotal" style="font-size: 1.6rem;">0</div>
-                <div class="tile-sub" id="aScoreSub">0.0 (0)</div>
-            </div>
+            <div class="tile h-blue" onclick="openShot('h')"><div class="tile-label">Shot</div><div class="tile-count" id="hShotTotal" style="font-size: 1.6rem;">0</div><div class="tile-sub" id="hScoreSub">0.0 (0)</div></div>
+            <div class="score-center-tile"><div class="score-center-label" id="q-label">Q1</div><div class="score-center-val" id="q-score-val">0-0</div></div>
+            <div class="tile tile-a" onclick="openShot('a')"><div class="tile-label">Shot</div><div class="tile-count" id="aShotTotal" style="font-size: 1.6rem;">0</div><div class="tile-sub" id="aScoreSub">0.0 (0)</div></div>
         </div>
-
         <button class="btn-action" style="background:var(--accent); grid-column: span 2;" onclick="undo()">UNDO</button>
     </div>
     <button class="btn-action" onclick="showSummary()" style="background:var(--entry-green); color:white; margin-top:5px;">Match Summary</button>
 </div>
 
-<div id="shotModal" class="modal">
-    <div class="modal-content" style="padding:20px;">
-        <h3 style="text-align:center; color:var(--accent); margin:0 0 15px 0;">RESULT</h3>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <button onclick="regShot('g')" style="height:70px; background:var(--entry-green); color:white; border:none; border-radius:8px;">GOAL</button>
-            <button onclick="regShot('b')" style="height:70px; background:var(--accent); color:black; border:none; border-radius:8px;">POINT</button>
-            <button onclick="regShot('o')" style="height:70px; background:#c0392b; color:white; border:none; border-radius:8px;">MISS</button>
-            <button onclick="regShot('r')" style="height:70px; background:#2980b9; color:white; border:none; border-radius:8px;">RUSHED</button>
-        </div>
-        <button onclick="closeMod('shotModal')" style="width:100%; margin-top:15px; padding:10px; background:#333; color:white; border:none;">CANCEL</button>
-    </div>
-</div>
-
-<div id="finishModal" class="modal">
-    <div class="modal-content">
-        <div id="sum-header" style="padding:12px; background:#222; text-align:center; font-weight:900; color:var(--accent);">ANALYTICS</div>
-        <div class="summary-scroll" id="sum-content"></div>
-        <div style="padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; background:#111;">
-            <button class="btn-action" style="background:#444; color:white;" onclick="exportCSV()">CSV</button>
-            <button class="btn-action" style="background:#c0392b; color:white;" onclick="resetGame()">RESET</button>
-            <button class="btn-action" style="grid-column: span 2; background:var(--accent); color:black;" onclick="closeMod('finishModal')">BACK</button>
-        </div>
-    </div>
-</div>
+<div id="shotModal" class="modal"><div class="modal-content" style="padding:20px;"><h3 style="text-align:center; color:var(--accent); margin:0 0 15px 0;">RESULT</h3><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><button onclick="regShot('g')" style="height:70px; background:var(--entry-green); color:white; border:none; border-radius:8px;">GOAL</button><button onclick="regShot('b')" style="height:70px; background:var(--accent); color:black; border:none; border-radius:8px;">POINT</button><button onclick="regShot('o')" style="height:70px; background:#c0392b; color:white; border:none; border-radius:8px;">MISS</button><button onclick="regShot('r')" style="height:70px; background:#2980b9; color:white; border:none; border-radius:8px;">RUSHED</button></div><button onclick="closeMod('shotModal')" style="width:100%; margin-top:15px; padding:10px; background:#333; color:white; border:none;">CANCEL</button></div></div>
+<div id="finishModal" class="modal"><div class="modal-content"><div id="sum-header" style="padding:12px; background:#222; text-align:center; font-weight:900; color:var(--accent);">ANALYTICS</div><div class="summary-scroll" id="sum-content"></div><div style="padding:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px; background:#111;"><button class="btn-action" style="background:#444; color:white;" onclick="exportCSV()">CSV</button><button class="btn-action" style="background:#c0392b; color:white;" onclick="resetGame()">RESET</button><button class="btn-action" style="grid-column: span 2; background:var(--accent); color:black;" onclick="closeMod('finishModal')">BACK</button></div></div></div>
 
 <script>
-    let q = 1, curT = 'h', history = [], lastI50Time = {h:Date.now(), a:Date.now()}, lastToTime = {h:0, a:0};
-    let db = JSON.parse(localStorage.getItem('afl_v61')) || {
+    let q = 1, curT = 'h', history = [];
+    let lastI50Time = {h: null, a: null}; // Null means timer is waiting for first click
+    let lastToTime = {h:0, a:0};
+    let db = JSON.parse(localStorage.getItem('afl_v62')) || {
         stats: {1:{},2:{},3:{},4:{}},
         shots: {1:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 2:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 3:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 4:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}},
         toConv: {1:{h:0,a:0}, 2:{h:0,a:0}, 3:{h:0,a:0}, 4:{h:0,a:0}}
@@ -160,13 +113,21 @@
 
     function updateTimers() {
         ['h','a'].forEach(t => {
+            let display = document.getElementById(`${t}-timer`);
+            let box = document.getElementById(`${t}-timer-box`);
+            
+            if (lastI50Time[t] === null) {
+                display.innerText = "00:00";
+                box.classList.remove('alarm-active');
+                return;
+            }
+
             let diff = Math.floor((Date.now() - lastI50Time[t]) / 1000);
             let m = Math.floor(diff / 60);
             let s = diff % 60;
-            let box = document.getElementById(`${t}-timer-box`);
             if (m > 0 && m % 5 === 0 && s < 10) box.classList.add('alarm-active');
             else box.classList.remove('alarm-active');
-            document.getElementById(`${t}-timer`).innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         });
     }
 
@@ -177,6 +138,13 @@
         history.push({t:'s', q, k}); save(); 
     }
 
+    function setQ(n) { 
+        q=n; 
+        lastI50Time = {h: null, a: null}; // Reset timers on quarter change
+        document.querySelectorAll('.q-btn').forEach((b,i)=>b.classList.toggle('active', i+1===n)); 
+        render(); 
+    }
+
     function openShot(t) { curT=t; document.getElementById('shotModal').style.display='flex'; }
     function regShot(m) { 
         let k=curT+m; db.shots[q][k]++; 
@@ -185,8 +153,7 @@
     }
 
     function undo() { if(!history.length) return; let l=history.pop(); if(l.t==='s') db.stats[l.q][l.k]--; else db.shots[l.q][l.k]--; save(); }
-    function setQ(n) { q=n; document.querySelectorAll('.q-btn').forEach((b,i)=>b.classList.toggle('active', i+1===n)); render(); }
-    function save() { localStorage.setItem('afl_v61', JSON.stringify(db)); render(); }
+    function save() { localStorage.setItem('afl_v62', JSON.stringify(db)); render(); }
     function closeMod(id) { document.getElementById(id).style.display='none'; }
 
     function render() {
@@ -217,36 +184,10 @@
         const sG = (k) => [1,2,3,4].reduce((a,b)=>a+(db.shots[b][k]||0),0);
         const getT = (t) => sG(t+'g')+sG(t+'b')+sG(t+'o')+sG(t+'r');
         const hSh=getT('h'), aSh=getT('a');
-
-        let html = `<div class="sum-card">
-            <h4 style="margin:0 0 10px 0; color:var(--accent);">FULL MATCH SUMMARY</h4>
-            <table class="sum-table">
-                <tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>
-                ${row('Score', `${sG('hg')}.${sG('hb')+sG('hr')} (${sG('hg')*6+sG('hb')+sG('hr')})`, `${sG('ag')}.${sG('ab')+sG('ar')} (${sG('ag')*6+sG('ab')+sG('ar')})`)}
-                ${row('Clearance', sS('hClr'), sS('aClr'), true)}
-                ${row('Inside 50', sS('hI50'), sS('aI50'), true)}
-                ${row('Tackles', sS('hTkl'), sS('aTkl'), true)}
-                ${row('Turnovers', sS('hTo'), sS('aTo'), true)}
-                <tr><td colspan="4" style="font-size:0.55rem; color:#555; padding-top:10px;">CONVERSION PERFORMANCE</td></tr>
-                ${row('Clearance to I50 (Rate)', Math.round((sS('hI50')/sS('hClr')||0)*100)+'%', Math.round((sS('aI50')/sS('aClr')||0)*100)+'%')}
-                ${row('Inside 50 to Shot (Rate)', Math.round((hSh/sS('hI50')||0)*100)+'%', Math.round((aSh/sS('aI50')||0)*100)+'%')}
-                ${row('Turnover to Shot (45s Window)', Math.round(([1,2,3,4].reduce((a,b)=>a+db.toConv[b].h,0)/sS('hTo')||0)*100)+'%', Math.round(([1,2,3,4].reduce((a,b)=>a+db.toConv[b].a,0)/sS('aTo')||0)*100)+'%')}
-            </table>
-        </div>`;
-
+        let html = `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">FULL MATCH SUMMARY</h4><table class="sum-table"><tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>${row('Score', `${sG('hg')}.${sG('hb')+sG('hr')} (${sG('hg')*6+sG('hb')+sG('hr')})`, `${sG('ag')}.${sG('ab')+sG('ar')} (${sG('ag')*6+sG('ab')+sG('ar')})`)}${row('Clearance', sS('hClr'), sS('aClr'), true)}${row('Inside 50', sS('hI50'), sS('aI50'), true)}${row('Tackles', sS('hTkl'), sS('aTkl'), true)}${row('Turnovers', sS('hTo'), sS('aTo'), true)}<tr><td colspan="4" style="font-size:0.55rem; color:#555; padding-top:10px;">CONVERSION PERFORMANCE</td></tr>${row('Clearance to I50 (Rate)', Math.round((sS('hI50')/sS('hClr')||0)*100)+'%', Math.round((sS('aI50')/sS('aClr')||0)*100)+'%')}${row('Inside 50 to Shot (Rate)', Math.round((hSh/sS('hI50')||0)*100)+'%', Math.round((aSh/sS('aI50')||0)*100)+'%')}${row('Turnover to Shot (Rate)', Math.round(([1,2,3,4].reduce((a,b)=>a+db.toConv[b].h,0)/sS('hTo')||0)*100)+'%', Math.round(([1,2,3,4].reduce((a,b)=>a+db.toConv[b].a,0)/sS('aTo')||0)*100)+'%')}</table></div>`;
         [1,2,3,4].forEach(i => {
             let s=db.shots[i], st=db.stats[i];
-            html += `<div class="sum-card" style="border-left-color:#444;">
-                <h4 style="margin:0 0 8px 0; font-size:0.65rem; color:var(--accent);">QUARTER ${i} DATA</h4>
-                <table class="sum-table">
-                    <tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>
-                    ${row('Score', `${s.hg}.${s.hb+s.hr}`, `${s.ag}.${s.ab+s.ar}`)}
-                    ${row('Clearance', st.hClr, st.aClr, true)}
-                    ${row('Inside 50', st.hI50, st.aI50, true)}
-                    ${row('Tackle', st.hTkl, st.aTkl, true)}
-                    ${row('Turnover', st.hTo, st.aTo, true)}
-                </table>
-            </div>`;
+            html += `<div class="sum-card" style="border-left-color:#444;"><h4 style="margin:0 0 8px 0; font-size:0.65rem; color:var(--accent);">QUARTER ${i}</h4><table class="sum-table"><tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>${row('Score', `${s.hg}.${s.hb+s.hr}`, `${s.ag}.${s.ab+s.ar}`)}${row('Clearance', st.hClr, st.aClr, true)}${row('Inside 50', st.hI50, st.aI50, true)}${row('Tackle', st.hTkl, st.aTkl, true)}${row('Turnover', st.hTo, st.aTo, true)}</table></div>`;
         });
         document.getElementById('sum-content').innerHTML = html;
         document.getElementById('finishModal').style.display='flex';
@@ -261,18 +202,12 @@
         let csv = "Quarter,Stat,Home,Away,Diff,Home %,Away %\n";
         [1,2,3,4].forEach(i => {
             let s=db.shots[i], st=db.stats[i];
-            const hShots = s.hg + s.hb + s.ho + s.hr;
-            const aShots = s.ag + s.ab + s.ao + s.ar;
+            const hSh = s.hg+s.hb+s.ho+s.hr, aSh = s.ag+s.ab+s.ao+s.ar;
             const r = (n, h, v, hp='', ap='') => csv += `Q${i},${n},${h},${v},${h-v},${hp},${ap}\n`;
-            
-            r('Goals', s.hg, s.ag); 
-            r('Behinds', s.hb+s.hr, s.ab+s.ar); 
-            r('Clearance', st.hClr, st.aClr);
-            r('I50', st.hI50, st.aI50); 
-            r('Turnover', st.hTo, st.aTo); 
-            r('Tackles', st.hTkl, st.aTkl);
+            r('Goals', s.hg, s.ag); r('Behinds', s.hb+s.hr, s.ab+s.ar); r('Clearance', st.hClr, st.aClr);
+            r('I50', st.hI50, st.aI50); r('Turnover', st.hTo, st.aTo); r('Tackles', st.hTkl, st.aTkl);
             r('Clr to I50 Rate', '', '', '', Math.round((st.hI50/st.hClr||0)*100)+'%', Math.round((st.aI50/st.aClr||0)*100)+'%');
-            r('I50 to Shot Rate', '', '', '', Math.round((hShots/st.hI50||0)*100)+'%', Math.round((aShots/st.aI50||0)*100)+'%');
+            r('I50 to Shot Rate', '', '', '', Math.round((hSh/st.hI50||0)*100)+'%', Math.round((aSh/st.aI50||0)*100)+'%');
             r('TO to Shot Rate', '', '', '', Math.round((db.toConv[i].h/st.hTo||0)*100)+'%', Math.round((db.toConv[i].a/st.aTo||0)*100)+'%');
         });
         let b=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(b);
@@ -280,7 +215,6 @@
     }
     function resetGame() { if(confirm("Reset match data?")) { localStorage.clear(); location.reload(); } }
 
-    // Service Worker Registration
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(err => console.log("SW failed", err));
     }
