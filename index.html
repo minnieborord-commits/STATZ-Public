@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Statz AFL v65</title>
+    <title>Statz AFL v67</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -88,7 +88,9 @@
 <script>
     let q = 1, curT = 'h', history = [];
     let lastI50Time = {h: null, a: null}, lastToTime = {h: 0, a: 0}, lastClrTime = {h: 0, a: 0};
-    let db = JSON.parse(localStorage.getItem('statz_v65')) || {
+    
+    // Updated Key to statz_v67 to force refresh of logic
+    let db = JSON.parse(localStorage.getItem('statz_v67')) || {
         stats: {1:{},2:{},3:{},4:{}},
         shots: {1:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 2:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 3:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 4:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}},
         timing: {1:{hTo:[], aTo:[], hClr:[], aClr:[]}, 2:{hTo:[], aTo:[], hClr:[], aClr:[]}, 3:{hTo:[], aTo:[], hClr:[], aClr:[]}, 4:{hTo:[], aTo:[], hClr:[], aClr:[]}}
@@ -125,7 +127,7 @@
     function regShot(m) { 
         let k=curT+m; db.shots[q][k]++; 
         let now = Date.now();
-        if(lastToTime[curT] && now - lastToTime[curT] < 45000) db.timing[q][curT+'To'].push((now - lastToTime[curT])/1000);
+        if(lastToTime[curT] && now - lastToTime[curT] < 30000) db.timing[q][curT+'To'].push((now - lastToTime[curT])/1000);
         lastToTime[curT] = 0;
         history.push({t:'g', q, k}); closeMod('shotModal'); save(); 
     }
@@ -133,7 +135,7 @@
     function setQ(n) { q=n; lastI50Time = {h: null, a: null}; document.querySelectorAll('.q-btn').forEach((b,i)=>b.classList.toggle('active', i+1===n)); render(); }
     function openShot(t) { curT=t; document.getElementById('shotModal').style.display='flex'; }
     function undo() { if(!history.length) return; let l=history.pop(); if(l.t==='s') db.stats[l.q][l.k]--; else db.shots[l.q][l.k]--; save(); }
-    function save() { localStorage.setItem('statz_v65', JSON.stringify(db)); render(); }
+    function save() { localStorage.setItem('statz_v67', JSON.stringify(db)); render(); }
     function closeMod(id) { document.getElementById(id).style.display='none'; }
     function getAvg(arr) { if(!arr.length) return 0; return (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1); }
 
@@ -163,6 +165,8 @@
         const sS = (k) => [1,2,3,4].reduce((a,b)=>a+(db.stats[b][k]||0),0);
         const sG = (k) => [1,2,3,4].reduce((a,b)=>a+(db.shots[b][k]||0),0);
         const sT = (k) => [1,2,3,4].flatMap(i => db.timing[i][k]);
+        const getTShot = (t) => sG(t+'g')+sG(t+'b')+sG(t+'o')+sG(t+'r');
+        
         let html = `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">FULL MATCH SUMMARY</h4><table class="sum-table">
             <tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>
             ${row('Score', `${sG('hg')}.${sG('hb')+sG('hr')} (${sG('hg')*6+sG('hb')+sG('hr')})`, `${sG('ag')}.${sG('ab')+sG('ar')} (${sG('ag')*6+sG('ab')+sG('ar')})`)}
@@ -170,9 +174,27 @@
             ${row('Inside 50', sS('hI50'), sS('aI50'), true)}
             ${row('Turnovers', sS('hTo'), sS('aTo'), true)}
             <tr><td colspan="4" style="font-size:0.55rem; color:#555; padding-top:10px;">EFFICIENCY</td></tr>
-            ${row('TO to Shot Rate', Math.round((sT('hTo').length/sS('hTo')||0)*100)+'%', Math.round((sT('aTo').length/sS('aTo')||0)*100)+'%')}
-            ${row('Clr to I50 Rate', Math.round((sS('hI50')/sS('hClr')||0)*100)+'%', Math.round((sS('aI50')/sS('aClr')||0)*100)+'%')}
+            ${row('TO to Shot % 30 secs', Math.round((sT('hTo').length/sS('hTo')||0)*100)+'%', Math.round((sT('aTo').length/sS('aTo')||0)*100)+'%')}
+            ${row('Clr to I50 % 30 secs', Math.round((sT('hClr').length/sS('hClr')||0)*100)+'%', Math.round((sT('aClr').length/sS('aClr')||0)*100)+'%')}
+            ${row('Inside 50 to Shot %', Math.round((getTShot('h')/sS('hI50')||0)*100)+'%', Math.round((getTShot('a')/sS('aI50')||0)*100)+'%')}
+            ${row('Shot to Goal %', Math.round((sG('hg')/getTShot('h')||0)*100)+'%', Math.round((sG('ag')/getTShot('a')||0)*100)+'%')}
         </table></div>`;
+
+        [1,2,3,4].forEach(i => {
+            let st = db.stats[i], sh = db.shots[i], ti = db.timing[i];
+            let hShot = sh.hg+sh.hb+sh.ho+sh.hr, aShot = sh.ag+sh.ab+sh.ao+sh.ar;
+            html += `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">QUARTER ${i}</h4><table class="sum-table">
+                <tr><th>STAT</th><th>HOME</th><th>AWAY</th></tr>
+                ${row('Score', `${sh.hg}.${sh.hb+sh.hr} (${sh.hg*6+sh.hb+sh.hr})`, `${sh.ag}.${sh.ab+sh.ar} (${sh.ag*6+sh.ab+sh.ar})`)}
+                ${row('CLR', st.hClr, st.aClr)}
+                ${row('I50', st.hI50, st.aI50)}
+                ${row('TO', st.hTo, st.aTo)}
+                <tr><td colspan="3" style="font-size:0.55rem; color:#555; padding-top:5px;">QUARTER EFFICIENCY</td></tr>
+                ${row('TO to Shot %', Math.round((ti.hTo.length/st.hTo||0)*100)+'%', Math.round((ti.aTo.length/st.aTo||0)*100)+'%')}
+                ${row('Clr to I50 %', Math.round((ti.hClr.length/st.hClr||0)*100)+'%', Math.round((ti.aClr.length/st.aClr||0)*100)+'%')}
+            </table></div>`;
+        });
+
         document.getElementById('sum-content').innerHTML = html;
         document.getElementById('finishModal').style.display='flex';
     }
