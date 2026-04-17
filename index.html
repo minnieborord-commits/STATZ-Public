@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Statz AFL v73</title>
+    <title>Team Statz AFL v75</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#fbc531">
@@ -12,16 +13,25 @@
         :root { --home-blue: #002b5c; --home-red: #d71920; --away-grey: #222222; --away-border: #777777; --accent: #fbc531; --entry-green: #27ae60; --bg-dark: #000000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: -apple-system, system-ui, sans-serif; margin: 0; background: var(--bg-dark); color: white; display: flex; flex-direction: column; min-height: 100dvh; }
+        
+        .app-header { display: flex; align-items: center; justify-content: center; padding: 12px 8px 8px; background: #000; border-bottom: 1px solid #222; }
+        .logo-text { font-weight: 900; letter-spacing: -1px; font-size: 1.2rem; }
+        .logo-team { color: #666; font-size: 0.7rem; margin-right: 4px; vertical-align: middle; }
+        .logo-statz { color: var(--accent); }
+
         #display-zone { flex: 0 0 auto; background: #0a0a0a; padding: 8px; border-bottom: 2px solid #333; }
         .timer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-        .timer-box { background: #111; border: 1px solid #333; border-radius: 6px; padding: 4px; text-align: center; transition: background 0.3s; }
+        .timer-box { background: #111; border: 1px solid #333; border-radius: 6px; padding: 4px; text-align: center; }
         .timer-label { font-size: 0.5rem; color: #777; font-weight: 900; text-transform: uppercase; }
         .timer-val { font-size: 1.1rem; font-weight: 900; color: var(--accent); font-family: monospace; }
-        @keyframes pulse-red { 0% { background: #111; } 50% { background: #7b0000; box-shadow: inset 0 0 15px #ff0000; } 100% { background: #111; } }
+        
+        @keyframes pulse-red { 0% { background: #111; } 50% { background: #7b0000; } 100% { background: #111; } }
         .alarm-active { animation: pulse-red 1s infinite; border-color: #ff0000 !important; }
+        
         .q-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px;}
         .q-btn { height: 32px; border: none; background: #222; color: #666; border-radius: 4px; font-weight: 900; }
         .q-btn.active { background: var(--entry-green); color: white; }
+        
         .bars-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 5px 0; }
         .bar-group { display: flex; flex-direction: column; gap: 2px; }
         .bar-label { font-size: 0.5rem; font-weight: 900; text-transform: uppercase; color: #555; text-align: center; }
@@ -29,6 +39,7 @@
         .bar-fill-h { height: 100%; background: var(--home-red); transition: width 0.3s ease; }
         .bar-fill-a { height: 100%; background: var(--away-border); transition: width 0.3s ease; }
         .bar-diff { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3; font-size: 0.7rem; font-weight: 900; color: #fff; text-shadow: 1px 1px 1px #000; }
+        
         #input-zone { flex: 1; background: #1a1a1a; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; }
         .tile { position: relative; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
@@ -36,9 +47,49 @@
         .tile-label { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; text-align: center; }
         .tile-count { font-size: 2.1rem; font-weight: 900; }
         .tile-sub { font-size: 0.55rem; font-weight: bold; opacity: 0.8; }
+        
         .shot-row { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 6px; }
         .score-center-tile { background: #000; border: 1px solid #333; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .score-center-val { font-size: 1.4rem; font-weight: 900; color: var(--accent); }
         .score-center-label { font-size: 0.5rem; font-weight: 900; color: #555; text-transform: uppercase; }
+        
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.98); z-index: 100; align-items: center; justify-content: center; padding: 10px; }
-        .modal-content { background: #111; width: 100%; border-radius: 12px; border: 1px solid var(--accent); display: flex; flex-direction: column; max
+        .modal-content { background: #111; width: 100%; border-radius: 12px; border: 1px solid var(--accent); display: flex; flex-direction: column; max-height: 94dvh; }
+        .summary-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+        .sum-card { background: #1e1e1e; border-radius: 8px; padding: 12px; margin-bottom: 12px; border-left: 4px solid var(--accent); }
+        .sum-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .sum-table th { color: #555; font-size: 0.55rem; text-transform: uppercase; text-align: right; padding-bottom: 4px; }
+        .sum-table td { padding: 8px 4px; border-bottom: 1px solid #2a2a2a; text-align: right; }
+        .sum-table td:first-child { text-align: left; color: #999; font-weight: bold; font-size: 0.68rem; }
+        .btn-action { height: 44px; border: none; border-radius: 6px; font-weight: 900; text-transform: uppercase; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <span class="logo-text"><span class="logo-team">TEAM</span><span class="logo-statz">STATZ</span></span>
+</div>
+
+<div id="display-zone">
+    <div class="timer-grid">
+        <div class="timer-box" id="h-timer-box"><div class="timer-label">Home Last I50</div><div class="timer-val" id="h-timer">00:00</div></div>
+        <div class="timer-box" id="a-timer-box"><div class="timer-label">Away Last I50</div><div class="timer-val" id="a-timer">00:00</div></div>
+    </div>
+    <div class="q-nav">
+        <button class="q-btn active" onclick="setQ(1)">Q1</button>
+        <button class="q-btn" onclick="setQ(2)">Q2</button>
+        <button class="q-btn" onclick="setQ(3)">Q3</button>
+        <button class="q-btn" onclick="setQ(4)">Q4</button>
+    </div>
+    <div class="bars-container">
+        <div class="bar-group" id="bar-CLR"></div>
+        <div class="bar-group" id="bar-I50"></div>
+        <div class="bar-group" id="bar-TKL"></div>
+        <div class="bar-group" id="bar-SHT"></div>
+    </div>
+</div>
+
+<div id="input-zone">
+    <div class="stat-grid">
+        <div class="tile h-blue" onclick="add('hClr')"><div class="tile-label">Centre Clearance</div><div class="tile-count" id="hClr">0</div><div class="tile-sub" id="hClrEff">To Shot: 0%</div></div>
+        <div class="tile tile-a" onclick="add('a
