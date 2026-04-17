@@ -1,4 +1,4 @@
-const CACHE_NAME = 'afl-scout-v61';
+const CACHE_NAME = 'afl-scout-v73';
 const assets = ['index.html', 'manifest.json'];
 
 self.addEventListener('install', (e) => {
