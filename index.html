@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Statz AFL v68</title>
+    <title>Statz AFL v72</title>
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -33,7 +33,7 @@
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex: 1; }
         .tile { position: relative; border-radius: 8px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.1); }
         .h-blue { background: var(--home-blue); } .h-red { background: var(--home-red); } .tile-a { background: var(--away-grey); }
-        .tile-label { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; }
+        .tile-label { font-size: 0.65rem; font-weight: 900; text-transform: uppercase; text-align: center; padding: 0 4px; }
         .tile-count { font-size: 2.1rem; font-weight: 900; }
         .tile-sub { font-size: 0.55rem; font-weight: bold; opacity: 0.8; }
         .shot-row { display: grid; grid-template-columns: 1.2fr 1fr 1.2fr; gap: 6px; }
@@ -59,19 +59,20 @@
         <div class="timer-box" id="a-timer-box"><div class="timer-label">Away Last I50</div><div class="timer-val" id="a-timer">00:00</div></div>
     </div>
     <div class="q-nav"><button class="q-btn active" onclick="setQ(1)">Q1</button><button class="q-btn" onclick="setQ(2)">Q2</button><button class="q-btn" onclick="setQ(3)">Q3</button><button class="q-btn" onclick="setQ(4)">Q4</button></div>
-    <div class="bars-container"><div class="bar-group" id="bar-CLR"></div><div class="bar-group" id="bar-I50"></div><div class="bar-group" id="bar-TKL"></div><div class="bar-group" id="bar-TO"></div></div>
+    <div class="bars-container"><div class="bar-group" id="bar-CLR"></div><div class="bar-group" id="bar-I50"></div><div class="bar-group" id="bar-TKL"></div><div class="bar-group" id="bar-SHT"></div></div>
 </div>
 
 <div id="input-zone">
     <div class="stat-grid">
-        <div class="tile h-blue" onclick="add('hClr')"><div class="tile-label">Clearance</div><div class="tile-count" id="hClr">0</div><div class="tile-sub" id="hClrEff">To I50: 0%</div></div>
-        <div class="tile tile-a" onclick="add('aClr')"><div class="tile-label">Clearance</div><div class="tile-count" id="aClr">0</div><div class="tile-sub" id="aClrEff">To I50: 0%</div></div>
+        <div class="tile h-blue" onclick="add('hClr')"><div class="tile-label">Centre Clearance</div><div class="tile-count" id="hClr">0</div><div class="tile-sub" id="hClrEff">To Shot: 0%</div></div>
+        <div class="tile tile-a" onclick="add('aClr')"><div class="tile-label">Centre Clearance</div><div class="tile-count" id="aClr">0</div><div class="tile-sub" id="aClrEff">To Shot: 0%</div></div>
+        
         <div class="tile h-red" onclick="add('hI50')"><div class="tile-label">Inside 50</div><div class="tile-count" id="hI50">0</div><div class="tile-sub" id="hEff">To Shot: 0%</div></div>
         <div class="tile tile-a" onclick="add('aI50')"><div class="tile-label">Inside 50</div><div class="tile-count" id="aI50">0</div><div class="tile-sub" id="aEff">To Shot: 0%</div></div>
+        
         <div class="tile h-blue" onclick="add('hTkl')"><div class="tile-label">Tackle</div><div class="tile-count" id="hTkl">0</div></div>
         <div class="tile tile-a" onclick="add('aTkl')"><div class="tile-label">Tackle</div><div class="tile-count" id="aTkl">0</div></div>
-        <div class="tile h-red" onclick="add('hTo')"><div class="tile-label">Turnover</div><div class="tile-count" id="hTo">0</div><div class="tile-sub" id="hToConv">To Shot: 0%</div></div>
-        <div class="tile tile-a" onclick="add('aTo')"><div class="tile-label">Turnover</div><div class="tile-count" id="aTo">0</div><div class="tile-sub" id="aToConv">To Shot: 0%</div></div>
+        
         <div class="shot-row" style="grid-column: span 2;">
             <div class="tile h-blue" onclick="openShot('h')"><div class="tile-label">Shot</div><div class="tile-count" id="hShotTotal" style="font-size: 1.6rem;">0</div><div class="tile-sub" id="hScoreSub">0.0 (0)</div></div>
             <div class="score-center-tile"><div class="score-center-label" id="q-label">Q1</div><div class="score-center-val" id="q-score-val">0-0</div></div>
@@ -87,14 +88,14 @@
 
 <script>
     let q = 1, curT = 'h', history = [];
-    let lastI50Time = {h: null, a: null}, lastToTime = {h: 0, a: 0}, lastClrTime = {h: 0, a: 0};
-    let db = JSON.parse(localStorage.getItem('statz_v68')) || {
+    let lastI50Time = {h: null, a: null}, lastClrTime = {h: 0, a: 0};
+    let db = JSON.parse(localStorage.getItem('statz_v72')) || {
         stats: {1:{},2:{},3:{},4:{}},
         shots: {1:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 2:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 3:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}, 4:{hg:0,hb:0,ho:0,hr:0,ag:0,ab:0,ao:0,ar:0}},
-        timing: {1:{hTo:[], aTo:[], hClr:[], aClr:[]}, 2:{hTo:[], aTo:[], hClr:[], aClr:[]}, 3:{hTo:[], aTo:[], hClr:[], aClr:[]}, 4:{hTo:[], aTo:[], hClr:[], aClr:[]}}
+        timing: {1:{hClr:[], aClr:[]}, 2:{hClr:[], aClr:[]}, 3:{hClr:[], aClr:[]}, 4:{hClr:[], aClr:[]}}
     };
 
-    const keys = ['hClr','aClr','hI50','aI50','hTkl','aTkl','hTo','aTo'];
+    const keys = ['hClr','aClr','hI50','aI50','hTkl','aTkl'];
     [1,2,3,4].forEach(i => keys.forEach(k => { if(!db.stats[i][k]) db.stats[i][k]=0; }));
 
     window.onload = () => { render(); setInterval(updateTimers, 1000); };
@@ -112,30 +113,26 @@
     function add(k) { 
         db.stats[q][k]++; 
         let now = Date.now();
-        if(k.endsWith('I50')) {
-            lastI50Time[k[0]] = now;
-            if(lastClrTime[k[0]] && now - lastClrTime[k[0]] < 30000) db.timing[q][k[0]+'Clr'].push((now - lastClrTime[k[0]])/1000);
-            lastClrTime[k[0]] = 0;
-        }
+        if(k.endsWith('I50')) lastI50Time[k[0]] = now;
         if(k.endsWith('Clr')) lastClrTime[k[0]] = now;
-        if(k.endsWith('To')) lastToTime[k[0]] = now;
         history.push({t:'s', q, k}); save(); 
     }
 
     function regShot(m) { 
         let k=curT+m; db.shots[q][k]++; 
         let now = Date.now();
-        if(lastToTime[curT] && now - lastToTime[curT] < 30000) db.timing[q][curT+'To'].push((now - lastToTime[curT])/1000);
-        lastToTime[curT] = 0;
+        if(lastClrTime[curT] && now - lastClrTime[curT] < 45000) {
+            db.timing[q][curT+'Clr'].push((now - lastClrTime[curT])/1000);
+            lastClrTime[curT] = 0;
+        }
         history.push({t:'g', q, k}); closeMod('shotModal'); save(); 
     }
 
     function setQ(n) { q=n; lastI50Time = {h: null, a: null}; document.querySelectorAll('.q-btn').forEach((b,i)=>b.classList.toggle('active', i+1===n)); render(); }
     function openShot(t) { curT=t; document.getElementById('shotModal').style.display='flex'; }
     function undo() { if(!history.length) return; let l=history.pop(); if(l.t==='s') db.stats[l.q][l.k]--; else db.shots[l.q][l.k]--; save(); }
-    function save() { localStorage.setItem('statz_v68', JSON.stringify(db)); render(); }
+    function save() { localStorage.setItem('statz_v72', JSON.stringify(db)); render(); }
     function closeMod(id) { document.getElementById(id).style.display='none'; }
-    function getAvg(arr) { if(!arr.length) return 0; return (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1); }
 
     function render() {
         keys.forEach(k => document.getElementById(k).innerText = db.stats[q][k]);
@@ -145,72 +142,6 @@
         document.getElementById('aScoreSub').innerText=`${s.ag}.${s.ab+s.ar} (${s.ag*6+s.ab+s.ar})`;
         document.getElementById('q-label').innerText = `Q${q}`;
         document.getElementById('q-score-val').innerText = `${s.hg*6+s.hb+s.hr}-${s.ag*6+s.ab+s.ar}`;
-        document.getElementById('hClrEff').innerText=`To I50: ${st.hClr>0?Math.round((st.hI50/st.hClr)*100):0}%`;
-        document.getElementById('aClrEff').innerText=`To I50: ${st.aClr>0?Math.round((st.aI50/st.aClr)*100):0}%`;
-        document.getElementById('hEff').innerText=`To Shot: ${st.hI50>0?Math.round((hS/st.hI50)*100):0}%`;
-        const hToC = db.timing[q].hTo.length;
-        document.getElementById('hToConv').innerText=`To Shot: ${st.hTo>0?Math.round((hToC/st.hTo)*100):0}%`;
-
-        const renderBar = (id, label, h, a) => {
-            let diff = h - a;
-            document.getElementById('bar-'+id).innerHTML = `<div class="bar-label">${label}</div><div class="bar-bg"><div class="bar-diff">${diff>0?'+'+diff:diff}</div><div class="bar-fill-h" style="width:${(h/(h+a||1))*100}%"></div><div class="bar-fill-a" style="width:${(a/(h+a||1))*100}%"></div></div>`;
-        };
-        renderBar('CLR','Clearance',st.hClr, st.aClr); renderBar('I50','Inside 50',st.hI50, st.aI50);
-        renderBar('TKL','Tackle',st.hTkl, st.aTkl); renderBar('TO','Turnover',st.hTo, st.aTo);
-    }
-
-    function showSummary() {
-        const sS = (k) => [1,2,3,4].reduce((a,b)=>a+(db.stats[b][k]||0),0);
-        const sG = (k) => [1,2,3,4].reduce((a,b)=>a+(db.shots[b][k]||0),0);
-        const sT = (k) => [1,2,3,4].flatMap(i => db.timing[i][k]);
-        const getTShot = (t) => sG(t+'g')+sG(t+'b')+sG(t+'o')+sG(t+'r');
         
-        let html = `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">FULL MATCH SUMMARY</h4><table class="sum-table">
-            <tr><th>STAT</th><th>HOME</th><th>AWAY</th><th>+/-</th></tr>
-            ${row('Score', `${sG('hg')}.${sG('hb')+sG('hr')} (${sG('hg')*6+sG('hb')+sG('hr')})`, `${sG('ag')}.${sG('ab')+sG('ar')} (${sG('ag')*6+sG('ab')+sG('ar')})`)}
-            ${row('Clearance', sS('hClr'), sS('aClr'), true)}
-            ${row('Inside 50', sS('hI50'), sS('aI50'), true)}
-            ${row('Turnovers', sS('hTo'), sS('aTo'), true)}
-            ${row('Tackles', sS('hTkl'), sS('aTkl'), true)}
-            <tr><td colspan="4" style="font-size:0.55rem; color:#555; padding-top:10px;">EFFICIENCY</td></tr>
-            ${row('TO to Shot % 30 secs', Math.round((sT('hTo').length/sS('hTo')||0)*100)+'%', Math.round((sT('aTo').length/sS('aTo')||0)*100)+'%')}
-            ${row('Clr to I50 % 30 secs', Math.round((sT('hClr').length/sS('hClr')||0)*100)+'%', Math.round((sT('aClr').length/sS('aClr')||0)*100)+'%')}
-            ${row('Inside 50 to Shot %', Math.round((getTShot('h')/sS('hI50')||0)*100)+'%', Math.round((getTShot('a')/sS('aI50')||0)*100)+'%')}
-            ${row('Shot to Goal %', Math.round((sG('hg')/getTShot('h')||0)*100)+'%', Math.round((sG('ag')/getTShot('a')||0)*100)+'%')}
-        </table></div>`;
-
-        [1,2,3,4].forEach(i => {
-            let st = db.stats[i], sh = db.shots[i];
-            html += `<div class="sum-card"><h4 style="margin:0 0 10px 0; color:var(--accent);">QUARTER ${i}</h4><table class="sum-table">
-                <tr><th>STAT</th><th>HOME</th><th>AWAY</th></tr>
-                ${row('Score', `${sh.hg}.${sh.hb+sh.hr} (${sh.hg*6+sh.hb+sh.hr})`, `${sh.ag}.${sh.ab+sh.ar} (${sh.ag*6+sh.ab+sh.ar})`)}
-                ${row('CLR', st.hClr, st.aClr)}
-                ${row('I50', st.hI50, st.aI50)}
-                ${row('TO', st.hTo, st.aTo)}
-                ${row('TKL', st.hTkl, st.aTkl)}
-            </table></div>`;
-        });
-
-        document.getElementById('sum-content').innerHTML = html;
-        document.getElementById('finishModal').style.display='flex';
-    }
-
-    function row(l, h, a, d) { let diff = parseFloat(h)-parseFloat(a); return `<tr><td>${l}</td><td>${h}</td><td>${a}</td><td style="color:${diff>0?'#27ae60':(diff<0?'#d71920':'#777')}">${d?(diff>0?'+'+diff.toFixed(0):diff.toFixed(0)):'-'}</td></tr>`; }
-
-    function exportCSV() {
-        let csv = "Quarter,Stat,Home,Away,Avg Home Speed,Avg Away Speed\n";
-        [1,2,3,4].forEach(i => {
-            let s=db.shots[i], st=db.stats[i], t=db.timing[i];
-            const r = (n, h, v, hs='', as='') => csv += `Q${i},${n},${h},${v},${hs},${as}\n`;
-            r('Score', `${s.hg}.${s.hb+s.hr}`, `${s.ag}.${s.ab+s.ar}`);
-            r('CLR to I50', st.hI50, st.aI50, getAvg(t.hClr), getAvg(t.aClr));
-            r('TO to Shot', t.hTo.length, t.aTo.length, getAvg(t.hTo), getAvg(t.aTo));
-        });
-        let b=new Blob([csv],{type:'text/csv'}); let a=document.createElement('a'); a.href=URL.createObjectURL(b);
-        a.download=`Statz_Export.csv`; a.click();
-    }
-    function resetGame() { if(confirm("Reset match data?")) { localStorage.clear(); location.reload(); } }
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-</script>
-</body>
-</html>
+        document.getElementById('hClrEff').innerText=`To Shot: ${st.hClr>0?Math.round((db.timing[q].hClr.length/st.hClr)*100):0}%`;
+        document.getElementById('aClrEff').innerText=`To Shot: ${st.aClr>0?Math.round((db.timing[q].aClr.length
