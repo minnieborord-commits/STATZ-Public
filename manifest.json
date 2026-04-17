@@ -1,15 +1,17 @@
 {
-  "name": "Statz AFL",
+  "name": "Team Statz AFL",
   "short_name": "Statz",
-  "start_url": "index.html",
+  "description": "Amateur AFL Statistics & Efficiency Tracker",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#fbc531",
   "icons": [
     {
       "src": "icon.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
